@@ -7,11 +7,12 @@ import { ConfirmationModal } from './components/ConfirmationModal';
 import { CropModal } from './components/CropModal';
 import { Notification } from './components/Notification';
 import { VideoModal } from './components/VideoModal';
-import { generateImageFromApi, suggestSessionNames, generateImageMetadata, generateVideoFromApi } from './services/geminiService';
+import { suggestSessionNames, generateImageMetadata } from './services/geminiService';
+import { generateImage, generateVideo, getVideoModelName } from './services/modelDispatcher';
 import { createSessionZipWithMain } from './services/sessionExporter';
 import { compressImageForStorage } from './services/imageCompressor';
-import type { ImagePair, EditMode, SportType, ConsoleType, WantedStyle, EdgeStyle } from './types';
-import { getPromptForMode } from './constants';
+import type { ImagePair, EditMode, SportType, ConsoleType, WantedStyle, EdgeStyle, ImageModelId } from './types';
+import { getPromptForMode, MODEL_CONFIGS } from './constants';
 import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, ReplaceIcon, TrashIcon, StarIcon, StarIconSolid, PhotoIcon, XCircleIcon, SparklesIcon } from './components/icons';
 
 const LOCAL_STORAGE_KEY = 'dragonArtSession';
@@ -117,6 +118,7 @@ const App: React.FC = () => {
     const [referenceImages, setReferenceImages] = useState<string[]>([]);
     const [customPrompt, setCustomPrompt] = useState('');
     const [editMode, setEditMode] = useState<EditMode>('freestyle');
+    const [selectedModel, setSelectedModel] = useState<ImageModelId>('gemini-3-pro');
     const [universalFlair, setUniversalFlair] = useState(false);
     const [sportType, setSportType] = useState<SportType>('baseball');
     const [consoleType, setConsoleType] = useState<ConsoleType>('generic');
@@ -414,11 +416,12 @@ const App: React.FC = () => {
             
             // --- VIDEO GENERATION BRANCH ---
             if (editMode === 'veoVideo') {
-                addLogMessage("Video generation mode selected. Calling Veo model...");
-                const videoUrl = await generateVideoFromApi(imageToSend, prompt, (status) => {
-                    addLogMessage(`Veo Status: ${status}`);
+                const videoModelName = getVideoModelName(selectedModel);
+                addLogMessage(`Video generation mode selected. Calling ${videoModelName} model...`);
+                const videoUrl = await generateVideo(selectedModel, imageToSend, prompt, (status) => {
+                    addLogMessage(`${videoModelName} Status: ${status}`);
                 });
-                
+
                 setVideoResult(videoUrl);
                 setIsVideoModalOpen(true);
                 addLogMessage("Video generation complete. Opening player.");
@@ -453,9 +456,11 @@ const App: React.FC = () => {
                  addLogMessage(`Description generated: "${description}"`);
             }
         
+            addLogMessage(`Using model: ${MODEL_CONFIGS[selectedModel].name}`);
             addLogMessage(`Prompt (truncated): "${prompt.substring(0, 150)}..."`);
-            
-            const generatedImageBase64 = await generateImageFromApi(
+
+            const generatedImageBase64 = await generateImage(
+                selectedModel,
                 imageToSend,
                 referenceImages,
                 prompt,
@@ -765,7 +770,7 @@ const App: React.FC = () => {
             />
             
             <div className="w-[450px] flex-shrink-0 p-4 h-full overflow-y-auto">
-                <ControlPanel 
+                <ControlPanel
                     mainImage={mainImage}
                     setMainImage={setMainImage}
                     referenceImages={referenceImages}
@@ -774,6 +779,8 @@ const App: React.FC = () => {
                     setCustomPrompt={setCustomPrompt}
                     editMode={editMode}
                     setEditMode={setEditMode}
+                    selectedModel={selectedModel}
+                    setSelectedModel={setSelectedModel}
                     isLoading={isLoading}
                     onGenerate={handleGenerateClick}
                     onCropClick={handleCropClick}

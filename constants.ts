@@ -577,3 +577,27 @@ export const getPromptForMode = ({
 
   return prompt;
 };
+
+// --- MODEL CONFIGURATIONS ---
+import type { ImageModelId, ModelConfig } from './types';
+
+export const MODEL_CONFIGS: Record<ImageModelId, ModelConfig> = {
+  'gemini-3-pro': {
+    id: 'gemini-3-pro',
+    name: 'Gemini 3 Pro Image',
+    description: 'Best quality, supports all 72 edit modes',
+    videoModel: 'veo-31',
+  },
+  'gemini-25-flash': {
+    id: 'gemini-25-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Faster generation, good quality',
+    videoModel: 'veo',
+  },
+  'gpt-image-1': {
+    id: 'gpt-image-1',
+    name: 'OpenAI GPT-Image-1',
+    description: 'OpenAI image generation with Sora video',
+    videoModel: 'sora-2',
+  },
+};

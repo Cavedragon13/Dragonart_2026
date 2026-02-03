@@ -1,18 +1,22 @@
 
 import React, { useCallback } from 'react';
-import type { EditMode, SportType, ConsoleType, WantedStyle, EdgeStyle } from '../types';
+import type { EditMode, SportType, ConsoleType, WantedStyle, EdgeStyle, ImageModelId } from '../types';
 import { ImageUploader } from './ImageUploader';
 import { SparklesIcon, XCircleIcon, ClipboardIcon, ChevronDownIcon, CropIcon, CameraIcon, DocumentDownloadIcon } from './icons';
+import { MODEL_CONFIGS } from '../constants';
+import { getVideoModelName } from '../services/modelDispatcher';
 
 interface ControlPanelProps {
   mainImage: string | null;
   setMainImage: (image: string | null) => void;
   referenceImages: string[];
-  setReferenceImages: (images: string[]) => void;
+  setReferenceImages: React.Dispatch<React.SetStateAction<string[]>>;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
   editMode: EditMode;
   setEditMode: (mode: EditMode) => void;
+  selectedModel: ImageModelId;
+  setSelectedModel: (model: ImageModelId) => void;
   isLoading: boolean;
   onGenerate: () => void;
   onCropClick: () => void;
@@ -213,6 +217,7 @@ const Accordion: React.FC<{ title: string; children: React.ReactNode; defaultOpe
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   mainImage, setMainImage, referenceImages, setReferenceImages,
   customPrompt, setCustomPrompt, editMode, setEditMode,
+  selectedModel, setSelectedModel,
   isLoading, onGenerate, onCropClick, onClearInputs, onDownloadSession, onEndSession,
   generationCount, isSessionActive, logMessages,
   universalFlair, setUniversalFlair, generateFromSource, setGenerateFromSource,
@@ -280,6 +285,26 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </div>
         )}
         <p className="text-xs text-gray-500 mt-2 text-center">Uploading an image will start a new session.</p>
+      </div>
+
+      {/* --- MODEL SELECTOR --- */}
+      <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <label htmlFor="model-select" className="block text-sm font-semibold text-gray-300 mb-2">AI Model</label>
+        <select
+          id="model-select"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value as ImageModelId)}
+          className="w-full bg-gray-900/50 border border-gray-600 rounded-lg p-2 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+        >
+          {Object.values(MODEL_CONFIGS).map((config) => (
+            <option key={config.id} value={config.id}>
+              {config.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          {MODEL_CONFIGS[selectedModel].description}
+        </p>
       </div>
 
       {/* --- GENERATE BUTTON (MOVED UP) --- */}
@@ -433,10 +458,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <div>
             <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wider text-purple-400">Video Studio</p>
             <div className="grid grid-cols-1 gap-2">
-                <ModeButton 
-                    label="Cinematic Video (Veo)" 
-                    isActive={editMode === 'veoVideo'} 
-                    onClick={() => handleModeChange('veoVideo')} 
+                <ModeButton
+                    label={`Cinematic Video (${getVideoModelName(selectedModel)})`}
+                    isActive={editMode === 'veoVideo'}
+                    onClick={() => handleModeChange('veoVideo')}
                     className="bg-gray-800 border border-purple-900/50"
                 />
             </div>

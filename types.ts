@@ -1,6 +1,17 @@
 
 export type Part = { text: string; } | { inlineData: { mimeType: string; data: string; }; };
 
+// Model selection types
+export type ImageModelId = 'gemini-3-pro' | 'gemini-25-flash' | 'gpt-image-1';
+export type VideoModelId = 'veo-31' | 'veo' | 'sora-2';
+
+export interface ModelConfig {
+  id: ImageModelId;
+  name: string;
+  description: string;
+  videoModel: VideoModelId;
+}
+
 export interface ImageMetadata {
   description: string;
   altText: string;

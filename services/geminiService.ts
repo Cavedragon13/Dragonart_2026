@@ -106,7 +106,8 @@ export const generateImageFromApi = async (
   mainImageBase64: string,
   referenceImagesBase64: string[],
   prompt: string,
-  onRetryAttempt?: (attempt: number, delay: number) => void
+  onRetryAttempt?: (attempt: number, delay: number) => void,
+  model: string = 'gemini-3-pro-image-preview'
 ): Promise<string> => {
   return callWithRetry(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -123,7 +124,7 @@ export const generateImageFromApi = async (
     parts.push({ text: prompt });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: model,
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE],
@@ -148,20 +149,23 @@ export const generateImageFromApi = async (
 export const generateVideoFromApi = async (
     imageBase64: string,
     prompt: string,
-    onStatusUpdate?: (status: string) => void
+    onStatusUpdate?: (status: string) => void,
+    model: string = 'veo-3.1-generate-preview'
 ): Promise<string> => {
     return callWithRetry(async () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const imagePart = base64ToPart(imageBase64);
-        
+
         if (!('inlineData' in imagePart)) {
             throw new Error("Invalid source data.");
         }
-        
-        if (onStatusUpdate) onStatusUpdate("Initializing Veo 3.1 Studio...");
-        
+
+        const modelName = model === 'veo-31' ? 'veo-3.1-generate-preview' :
+                          model === 'veo' ? 'veo-generate-preview' : model;
+        if (onStatusUpdate) onStatusUpdate(`Initializing ${modelName.includes('3.1') ? 'Veo 3.1' : 'Veo'} Studio...`);
+
         let operation = await ai.models.generateVideos({
-            model: 'veo-3.1-generate-preview',
+            model: modelName,
             prompt: prompt,
             image: {
                 imageBytes: imagePart.inlineData.data,
