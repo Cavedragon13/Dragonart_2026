@@ -1,0 +1,8 @@
+{
+  "name": "DragonArt Studio",
+  "description": "Gemini-powered AI for image creation and editing.",
+  "requestFramePermissions": [
+    "clipboard-read",
+    "camera"
+  ]
+}
